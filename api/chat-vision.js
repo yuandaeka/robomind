@@ -20,17 +20,14 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
+  const GROQ_API_KEY = process.env.GROQ_API_KEY || '';
 
-  if (!GEMINI_API_KEY) {
-    return res.status(500).json({ error: 'Gemini API key not configured' });
+  if (!GROQ_API_KEY) {
+    return res.status(500).json({ error: 'Groq API key not configured' });
   }
 
   try {
     const { imageBase64, mimeType, text, messages } = req.body;
-
-    const parts = [];
-    parts.push({ text: SYSTEM_PROMPT });
 
     let userText = text || '';
     if (messages && Array.isArray(messages)) {
@@ -40,37 +37,41 @@ export default async function handler(req, res) {
       }
     }
 
+    const userContent = [];
+    userContent.push({ type: 'text', text: userText || 'Analisis gambar ini dalam konteks Robo Mind.' });
+
     if (imageBase64 && mimeType) {
-      parts.push({
-        inline_data: { mime_type: mimeType, data: imageBase64 }
+      userContent.push({
+        type: 'image_url',
+        image_url: { url: `data:${mimeType};base64,${imageBase64}` }
       });
     }
 
-    parts.push({ text: userText || 'Analisis gambar ini dalam konteks Robo Mind.' });
-
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts }],
-          generationConfig: {
-            temperature: 0.3,
-            maxOutputTokens: 500
-          }
-        })
-      }
-    );
+    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${GROQ_API_KEY}`
+      },
+      body: JSON.stringify({
+        model: 'llama-4-scout-30b',
+        messages: [
+          { role: 'system', content: SYSTEM_PROMPT },
+          { role: 'user', content: userContent }
+        ],
+        temperature: 0.3,
+        max_tokens: 500
+      })
+    });
 
     const data = await response.json();
 
     if (!response.ok) {
-      console.error('Gemini API error:', data);
-      return res.status(response.status).json({ error: 'Gemini API request failed' });
+      console.error('Groq API error:', data);
+      return res.status(response.status).json({ error: 'Groq API request failed' });
     }
 
-    const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || 'Maaf, saya tidak bisa memproses gambar itu.';
+    const reply = data.choices?.[0]?.message?.content || 'Maaf, saya tidak bisa memproses gambar itu.';
 
     res.json({ reply });
   } catch (error) {

@@ -126,15 +126,12 @@ export default defineConfig(({ mode }) => {
               try {
                 const { imageBase64, mimeType, text, messages } = JSON.parse(body);
 
-                const geminiKey = env.GEMINI_API_KEY || '';
-                if (!geminiKey) {
+                const groqKey = env.GROQ_API_KEY || '';
+                if (!groqKey) {
                   res.statusCode = 500;
-                  res.end(JSON.stringify({ error: 'Gemini API key not configured' }));
+                  res.end(JSON.stringify({ error: 'Groq API key not configured' }));
                   return;
                 }
-
-                const parts = [];
-                parts.push({ text: VISION_SYSTEM_PROMPT });
 
                 let userText = text || '';
                 if (messages && Array.isArray(messages)) {
@@ -144,39 +141,43 @@ export default defineConfig(({ mode }) => {
                   }
                 }
 
+                const userContent = [];
+                userContent.push({ type: 'text', text: userText || 'Analisis gambar ini dalam konteks Robo Mind.' });
+
                 if (imageBase64 && mimeType) {
-                  parts.push({
-                    inline_data: { mime_type: mimeType, data: imageBase64 }
+                  userContent.push({
+                    type: 'image_url',
+                    image_url: { url: `data:${mimeType};base64,${imageBase64}` }
                   });
                 }
 
-                parts.push({ text: userText || 'Analisis gambar ini dalam konteks Robo Mind.' });
-
-                const response = await fetch(
-                  `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiKey}`,
-                  {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                      contents: [{ parts }],
-                      generationConfig: {
-                        temperature: 0.3,
-                        maxOutputTokens: 500
-                      }
-                    })
-                  }
-                );
+                const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${groqKey}`
+                  },
+                  body: JSON.stringify({
+                    model: 'llama-4-scout-30b',
+                    messages: [
+                      { role: 'system', content: VISION_SYSTEM_PROMPT },
+                      { role: 'user', content: userContent }
+                    ],
+                    temperature: 0.3,
+                    max_tokens: 500
+                  })
+                });
 
                 const data = await response.json();
 
                 if (!response.ok) {
-                  console.error('Gemini error:', data);
+                  console.error('Groq error:', data);
                   res.statusCode = response.status;
-                  res.end(JSON.stringify({ error: 'Gemini API request failed' }));
+                  res.end(JSON.stringify({ error: 'Groq API request failed' }));
                   return;
                 }
 
-                const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || 'Maaf, saya tidak bisa memproses gambar itu.';
+                const reply = data.choices?.[0]?.message?.content || 'Maaf, saya tidak bisa memproses gambar itu.';
                 res.end(JSON.stringify({ reply }));
               } catch (err) {
                 console.error('Vision error:', err);
