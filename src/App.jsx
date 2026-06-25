@@ -5,7 +5,6 @@ import ScreeningPage from './pages/ScreeningPage';
 import FeaturesPage from './pages/FeaturesPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
-import CheckEmailPage from './pages/CheckEmailPage';
 
 function App() {
   return (

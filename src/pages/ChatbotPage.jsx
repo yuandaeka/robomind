@@ -1,7 +1,8 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { Bot, User, Send, ArrowLeft, Loader2, Paperclip, Mic, X, Image as ImageIcon, FileText, Play, Camera } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import ReactMarkdown from 'react-markdown';
 import { generateChatResponse } from '../services/api';
 
 const ChatbotPage = () => {
@@ -18,6 +19,7 @@ const ChatbotPage = () => {
   const [isAttachmentMenuOpen, setIsAttachmentMenuOpen] = useState(false);
   
   const messagesEndRef = useRef(null);
+  const textareaRef = useRef(null);
   const fileInputRef = useRef(null);
   const cameraInputRef = useRef(null);
   const recordingIntervalRef = useRef(null);
@@ -25,6 +27,13 @@ const ChatbotPage = () => {
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
+
+  const autoResizeTextarea = useCallback(() => {
+    const ta = textareaRef.current;
+    if (!ta) return;
+    ta.style.height = 'auto';
+    ta.style.height = ta.scrollHeight + 'px';
+  }, []);
 
   useEffect(() => {
     scrollToBottom();
@@ -119,6 +128,7 @@ const ChatbotPage = () => {
     }
     
     setInput('');
+    if (textareaRef.current) textareaRef.current.style.height = 'auto';
     setSelectedFile(null);
     setIsLoading(true);
 
@@ -206,7 +216,11 @@ const ChatbotPage = () => {
                 )}
 
                 {/* Render Text Content */}
-                {msg.content && <span>{msg.content}</span>}
+                {msg.content && (
+                  <div className="markdown-content">
+                    <ReactMarkdown>{msg.content}</ReactMarkdown>
+                  </div>
+                )}
               </div>
             </motion.div>
           ))}
@@ -287,92 +301,102 @@ const ChatbotPage = () => {
               </div>
             </motion.div>
           ) : (
-            <form onSubmit={handleSend} className="relative flex items-center gap-2 group">
-              
-              <div className="absolute left-1.5 md:left-2 z-20">
-                <button 
-                  type="button"
-                  onClick={() => setIsAttachmentMenuOpen(!isAttachmentMenuOpen)}
-                  className="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded-full transition-colors"
-                >
-                  <Paperclip size={20} />
-                </button>
-
-                <AnimatePresence>
-                  {isAttachmentMenuOpen && (
-                    <motion.div 
-                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                      className="absolute bottom-12 left-0 w-56 bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden flex flex-col py-2"
-                    >
-                      <button 
-                        type="button"
-                        onClick={() => cameraInputRef.current?.click()}
-                        className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-left text-sm text-gray-700 font-medium"
-                      >
-                        <div className="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
-                          <Camera size={16} />
-                        </div>
-                        Buka Kamera
-                      </button>
-                      <button 
-                        type="button"
-                        onClick={() => fileInputRef.current?.click()}
-                        className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-left text-sm text-gray-700 font-medium"
-                      >
-                        <div className="w-8 h-8 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
-                          <ImageIcon size={16} />
-                        </div>
-                        Pilih File / Galeri
-                      </button>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-
-              <input 
-                type="file" 
-                ref={fileInputRef} 
-                onChange={handleFileChange} 
-                className="hidden" 
-                accept="image/*,.pdf,.doc,.docx"
-              />
-              <input 
-                type="file" 
-                ref={cameraInputRef} 
-                onChange={handleFileChange} 
-                className="hidden" 
-                accept="image/*"
-                capture="environment"
-              />
-
-              <input 
-                type="text" 
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                placeholder="Ketik pesan..." 
-                className="w-full bg-gray-50 border border-gray-200 rounded-full py-4 pl-12 md:pl-14 pr-24 md:text-base text-sm font-outfit focus:outline-none focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 focus:bg-white transition-all shadow-inner"
-              />
-              
-              <div className="absolute right-1.5 md:right-2 flex items-center gap-1">
-                {!input.trim() && !selectedFile ? (
+            <form onSubmit={handleSend}>
+              <div className="relative">
+                
+                <div className="absolute left-1.5 md:left-2 top-1/2 -translate-y-1/2 z-20">
                   <button 
                     type="button"
-                    onClick={toggleRecording}
-                    className="w-10 h-10 md:w-11 md:h-11 bg-gray-100 rounded-full flex items-center justify-center text-gray-600 hover:bg-gray-200 hover:text-gray-800 transition-colors"
+                    onClick={() => setIsAttachmentMenuOpen(!isAttachmentMenuOpen)}
+                    className="w-10 h-10 flex items-center justify-center text-gray-400 hover:text-primary-600 hover:bg-primary-50 rounded-full transition-colors"
                   >
-                    <Mic size={20} />
+                    <Paperclip size={20} />
                   </button>
-                ) : (
-                  <button 
-                    type="submit"
-                    disabled={isLoading}
-                    className="w-10 h-10 md:w-11 md:h-11 bg-gradient-to-r from-primary-500 to-primary-600 rounded-full flex items-center justify-center text-white hover:from-primary-600 hover:to-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-md shadow-primary-500/20 group-focus-within:scale-105 duration-200"
-                  >
-                    <Send size={18} className="ml-0.5" />
-                  </button>
-                )}
+
+                  <AnimatePresence>
+                    {isAttachmentMenuOpen && (
+                      <motion.div 
+                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                        className="absolute bottom-12 left-0 w-56 bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden flex flex-col py-2"
+                      >
+                        <button 
+                          type="button"
+                          onClick={() => cameraInputRef.current?.click()}
+                          className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-left text-sm text-gray-700 font-medium"
+                        >
+                          <div className="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                            <Camera size={16} />
+                          </div>
+                          Buka Kamera
+                        </button>
+                        <button 
+                          type="button"
+                          onClick={() => fileInputRef.current?.click()}
+                          className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors text-left text-sm text-gray-700 font-medium"
+                        >
+                          <div className="w-8 h-8 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
+                            <ImageIcon size={16} />
+                          </div>
+                          Pilih File / Galeri
+                        </button>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+                <input 
+                  type="file" 
+                  ref={fileInputRef} 
+                  onChange={handleFileChange} 
+                  className="hidden" 
+                  accept="image/*,.pdf,.doc,.docx"
+                />
+                <input 
+                  type="file" 
+                  ref={cameraInputRef} 
+                  onChange={handleFileChange} 
+                  className="hidden" 
+                  accept="image/*"
+                  capture="environment"
+                />
+
+                <textarea 
+                  ref={textareaRef}
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onInput={autoResizeTextarea}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSend(e);
+                    }
+                  }}
+                  placeholder="Ketik pesan..." 
+                  rows={1}
+                  className="w-full bg-gray-50 border border-gray-200 rounded-2xl py-4 pl-12 md:pl-14 pr-24 md:text-base text-sm font-outfit focus:outline-none focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 focus:bg-white transition-all shadow-inner resize-none overflow-hidden"
+                />
+                
+                <div className="absolute right-1.5 md:right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                  {!input.trim() && !selectedFile ? (
+                    <button 
+                      type="button"
+                      onClick={toggleRecording}
+                      className="w-10 h-10 md:w-11 md:h-11 bg-gray-100 rounded-full flex items-center justify-center text-gray-600 hover:bg-gray-200 hover:text-gray-800 transition-colors"
+                    >
+                      <Mic size={20} />
+                    </button>
+                  ) : (
+                    <button 
+                      type="submit"
+                      disabled={isLoading}
+                      className="w-10 h-10 md:w-11 md:h-11 bg-gradient-to-r from-primary-500 to-primary-600 rounded-full flex items-center justify-center text-white hover:from-primary-600 hover:to-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-md shadow-primary-500/20 duration-200"
+                    >
+                      <Send size={18} className="ml-0.5" />
+                    </button>
+                  )}
+                </div>
               </div>
             </form>
           )}

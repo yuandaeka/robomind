@@ -1,6 +1,7 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { Bot, X, Send } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import ReactMarkdown from 'react-markdown';
 
 const ChatbotWidget = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -10,6 +11,14 @@ const ChatbotWidget = () => {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const chatEndRef = useRef(null);
+  const textareaRef = useRef(null);
+
+  const autoResizeTextarea = useCallback(() => {
+    const ta = textareaRef.current;
+    if (!ta) return;
+    ta.style.height = 'auto';
+    ta.style.height = ta.scrollHeight + 'px';
+  }, []);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -20,6 +29,7 @@ const ChatbotWidget = () => {
 
     const userMsg = input.trim();
     setInput('');
+    if (textareaRef.current) textareaRef.current.style.height = 'auto';
     setMessages(prev => [...prev, { role: 'user', text: userMsg }]);
     setLoading(true);
 
@@ -45,7 +55,10 @@ const ChatbotWidget = () => {
   };
 
   const handleKeyDown = (e) => {
-    if (e.key === 'Enter') handleSend();
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
   };
 
   return (
@@ -92,7 +105,9 @@ const ChatbotWidget = () => {
                       ? 'bg-primary-500 text-white rounded-tr-none'
                       : 'bg-white border border-gray-100 shadow-sm text-gray-700 rounded-tl-none'
                   }`}>
-                    {msg.text}
+                    <div className="markdown-content">
+                      <ReactMarkdown>{msg.text}</ReactMarkdown>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -111,19 +126,21 @@ const ChatbotWidget = () => {
 
             <div className="p-4 bg-white border-t border-gray-100">
               <div className="relative">
-                <input 
-                  type="text" 
+                <textarea 
+                  ref={textareaRef}
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
+                  onInput={autoResizeTextarea}
                   onKeyDown={handleKeyDown}
                   placeholder="Ketik pertanyaan Anda..." 
                   disabled={loading}
-                  className="w-full bg-gray-50 border border-gray-200 rounded-full py-2.5 pl-4 pr-12 text-sm font-outfit focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 disabled:opacity-50"
+                  rows={1}
+                  className="w-full bg-gray-50 border border-gray-200 rounded-2xl py-2.5 pl-4 pr-12 text-sm font-outfit focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 disabled:opacity-50 resize-none overflow-hidden"
                 />
                 <button 
                   onClick={handleSend}
                   disabled={loading || !input.trim()}
-                  className="absolute right-1 top-1 w-8 h-8 bg-primary-500 rounded-full flex items-center justify-center text-white hover:bg-primary-600 transition-colors disabled:opacity-50"
+                  className="absolute right-1 top-1/2 -translate-y-1/2 w-8 h-8 bg-primary-500 rounded-full flex items-center justify-center text-white hover:bg-primary-600 transition-colors disabled:opacity-50"
                 >
                   <Send size={14} />
                 </button>
