@@ -16,6 +16,7 @@ const ChatbotPage = () => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
+  const [transcript, setTranscript] = useState('');
   const [isAttachmentMenuOpen, setIsAttachmentMenuOpen] = useState(false);
   
   const messagesEndRef = useRef(null);
@@ -23,6 +24,7 @@ const ChatbotPage = () => {
   const fileInputRef = useRef(null);
   const cameraInputRef = useRef(null);
   const recordingIntervalRef = useRef(null);
+  const recognitionRef = useRef(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -39,7 +41,7 @@ const ChatbotPage = () => {
     scrollToBottom();
   }, [messages]);
 
-  // --- Voice Note Handlers ---
+  // --- Voice Note Handlers (Real-time Speech-to-Text) ---
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -48,32 +50,55 @@ const ChatbotPage = () => {
 
   const toggleRecording = () => {
     if (isRecording) {
-      // Selesai merekam
+      // Stop recording -> populate input with transcript
       setIsRecording(false);
       clearInterval(recordingIntervalRef.current);
-      
-      // Kirim voice note ke UI
-      const userMessage = { 
-        role: 'user', 
-        content: '',
-        isAudio: true,
-        duration: recordingTime
-      };
-      setMessages(prev => [...prev, userMessage]);
       setRecordingTime(0);
-      setIsLoading(true);
 
-      // Simulasi proses API untuk voice note
-      setTimeout(async () => {
-        const apiMessages = messages.map(msg => ({ role: msg.role, content: msg.content || '[Pesan Suara]' }))
-                                    .concat({ role: 'user', content: 'Tolong tanggapi pesan suara saya secara suportif.' });
-        const responseText = await generateChatResponse(apiMessages);
-        setMessages(prev => [...prev, { role: 'assistant', content: responseText }]);
-        setIsLoading(false);
-      }, 1000);
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+        recognitionRef.current = null;
+      }
+
+      const text = transcript.trim();
+      if (text) {
+        setInput(text);
+        setTimeout(() => autoResizeTextarea(), 0);
+      }
+      setTranscript('');
 
     } else {
-      // Mulai merekam
+      // Start recording with Web Speech API
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        alert('Browser Anda tidak mendukung input suara. Silakan gunakan Chrome atau Edge.');
+        return;
+      }
+
+      const recognition = new SpeechRecognition();
+      recognition.lang = 'id-ID';
+      recognition.continuous = true;
+      recognition.interimResults = true;
+
+      recognition.onresult = (event) => {
+        let text = '';
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          text += event.results[i][0].transcript;
+        }
+        setTranscript(text);
+      };
+
+      recognition.onerror = (event) => {
+        if (event.error === 'no-speech') return;
+        console.error('Speech recognition error:', event.error);
+        setIsRecording(false);
+        clearInterval(recordingIntervalRef.current);
+        setRecordingTime(0);
+        setTranscript('');
+      };
+
+      recognitionRef.current = recognition;
+      recognition.start();
       setIsRecording(true);
       setRecordingTime(0);
       recordingIntervalRef.current = setInterval(() => {
@@ -86,6 +111,12 @@ const ChatbotPage = () => {
     setIsRecording(false);
     clearInterval(recordingIntervalRef.current);
     setRecordingTime(0);
+    setTranscript('');
+
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
+      recognitionRef.current = null;
+    }
   };
 
   // --- File Handlers ---
@@ -276,29 +307,42 @@ const ChatbotPage = () => {
             <motion.div 
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              className="flex items-center justify-between bg-red-50 border border-red-200 rounded-full py-2.5 pl-6 pr-2 shadow-inner"
+              className="bg-red-50 border border-red-200 rounded-2xl p-4 shadow-inner"
             >
-              <div className="flex items-center gap-3">
-                <span className="w-3 h-3 rounded-full bg-red-500 animate-pulse"></span>
-                <span className="text-red-600 font-bold font-outfit">{formatTime(recordingTime)}</span>
-                <span className="text-red-500/70 text-sm hidden sm:inline font-medium">Merekam pesan suara...</span>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <span className="w-3 h-3 rounded-full bg-red-500 animate-pulse shrink-0"></span>
+                  <span className="text-red-600 font-bold font-outfit">{formatTime(recordingTime)}</span>
+                  <span className="text-red-500/70 text-sm hidden sm:inline font-medium">Mendengarkan...</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button 
+                    type="button"
+                    onClick={cancelRecording}
+                    className="w-10 h-10 rounded-full flex items-center justify-center text-red-500 hover:bg-red-100 transition-colors"
+                  >
+                    <X size={20} />
+                  </button>
+                  <button 
+                    type="button"
+                    onClick={toggleRecording}
+                    disabled={!transcript.trim()}
+                    className="w-10 h-10 md:w-11 md:h-11 bg-red-500 rounded-full flex items-center justify-center text-white hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed shadow-md shadow-red-500/30 transition-all"
+                  >
+                    <Send size={18} className="ml-0.5" />
+                  </button>
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                <button 
-                  type="button"
-                  onClick={cancelRecording}
-                  className="w-10 h-10 rounded-full flex items-center justify-center text-red-500 hover:bg-red-100 transition-colors"
-                >
-                  <X size={20} />
-                </button>
-                <button 
-                  type="button"
-                  onClick={toggleRecording}
-                  className="w-10 h-10 md:w-11 md:h-11 bg-red-500 rounded-full flex items-center justify-center text-white hover:bg-red-600 shadow-md shadow-red-500/30 transition-all"
-                >
-                  <Send size={18} className="ml-0.5" />
-                </button>
-              </div>
+              {transcript && (
+                <div className="mt-3 text-sm text-gray-700 bg-white/70 rounded-xl p-3 leading-relaxed border border-red-100">
+                  {transcript}
+                </div>
+              )}
+              {!transcript && (
+                <div className="mt-3 text-sm text-gray-400 italic bg-white/50 rounded-xl p-3 text-center">
+                  Bicaralah sekarang...
+                </div>
+              )}
             </motion.div>
           ) : (
             <form onSubmit={handleSend}>
