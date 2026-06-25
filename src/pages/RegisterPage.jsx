@@ -36,7 +36,7 @@ const RegisterPage = () => {
       setError(error.message)
       setLoading(false)
     } else {
-      navigate('/check-email')
+      navigate('/')
     }
   }
 
