@@ -18,6 +18,21 @@ ATURAN:
 5. Jika ada pertanyaan tentang harga, fitur, atau cara menggunakan, jawab berdasarkan data di atas.
 6. Jawab dengan singkat, padat, dan jelas (maksimal 3-4 kalimat).`;
 
+const VISION_SYSTEM_PROMPT = `Kamu adalah asisten AI bernama Robo Assistant yang membantu orang tua memahami platform Robo Mind.
+
+Berikut adalah informasi LENGKAP tentang platform Robo Mind yang harus kamu ketahui:
+
+INFORMASI PLATFORM:
+${JSON.stringify(landingContext, null, 2)}
+
+ATURAN:
+1. Kamu HANYA boleh menjawab pertanyaan yang berhubungan dengan informasi di atas (platform Robo Mind).
+2. Jika pengguna bertanya di luar konteks Robo Mind (misal: matematika, IPA, programming umum, berita, dll), jawab dengan sopan bahwa kamu hanya bisa membantu seputar platform Robo Mind.
+3. Gunakan bahasa Indonesia yang ramah dan santai.
+4. Jangan mengaku sebagai psikolog sungguhan - kamu adalah asisten informasi platform.
+5. Jika ada pertanyaan tentang harga, fitur, atau cara menggunakan, jawab berdasarkan data di atas.
+6. Jawab dengan singkat, padat, dan jelas (maksimal 3-4 kalimat).`;
+
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
 
@@ -92,6 +107,79 @@ export default defineConfig(({ mode }) => {
                 res.end(JSON.stringify({ reply }));
               } catch (err) {
                 console.error('Chat error:', err);
+                res.statusCode = 500;
+                res.end(JSON.stringify({ error: 'Internal server error' }));
+              }
+            });
+          });
+
+          server.middlewares.use('/api/chat-vision', async (req, res) => {
+            if (req.method !== 'POST') {
+              res.statusCode = 405;
+              res.end(JSON.stringify({ error: 'Method not allowed' }));
+              return;
+            }
+
+            let body = '';
+            req.on('data', chunk => { body += chunk; });
+            req.on('end', async () => {
+              try {
+                const { imageBase64, mimeType, text, messages } = JSON.parse(body);
+
+                const geminiKey = env.GEMINI_API_KEY || '';
+                if (!geminiKey) {
+                  res.statusCode = 500;
+                  res.end(JSON.stringify({ error: 'Gemini API key not configured' }));
+                  return;
+                }
+
+                const parts = [];
+                parts.push({ text: VISION_SYSTEM_PROMPT });
+
+                let userText = text || '';
+                if (messages && Array.isArray(messages)) {
+                  const lastUserMsg = [...messages].reverse().find(m => m.role === 'user');
+                  if (lastUserMsg?.content) {
+                    userText = lastUserMsg.content;
+                  }
+                }
+
+                if (imageBase64 && mimeType) {
+                  parts.push({
+                    inline_data: { mime_type: mimeType, data: imageBase64 }
+                  });
+                }
+
+                parts.push({ text: userText || 'Analisis gambar ini dalam konteks Robo Mind.' });
+
+                const response = await fetch(
+                  `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiKey}`,
+                  {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      contents: [{ parts }],
+                      generationConfig: {
+                        temperature: 0.3,
+                        maxOutputTokens: 500
+                      }
+                    })
+                  }
+                );
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                  console.error('Gemini error:', data);
+                  res.statusCode = response.status;
+                  res.end(JSON.stringify({ error: 'Gemini API request failed' }));
+                  return;
+                }
+
+                const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || 'Maaf, saya tidak bisa memproses gambar itu.';
+                res.end(JSON.stringify({ reply }));
+              } catch (err) {
+                console.error('Vision error:', err);
                 res.statusCode = 500;
                 res.end(JSON.stringify({ error: 'Internal server error' }));
               }

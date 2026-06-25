@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Bot, User, Send, ArrowLeft, Loader2, Paperclip, Mic, X, Image as ImageIcon, FileText, Play, Camera } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
-import { generateChatResponse } from '../services/api';
+import { generateChatResponse, generateVisionChatResponse } from '../services/api';
 
 const ChatbotPage = () => {
   const [messages, setMessages] = useState([
@@ -152,22 +152,48 @@ const ChatbotPage = () => {
 
     setMessages(prev => [...prev, userMessage]);
     
-    // Siapkan text untuk dikirim ke API
-    let textToSend = input.trim();
-    if (selectedFile) {
-      textToSend = `[Melampirkan file: ${selectedFile.name}]\n${textToSend}`;
-    }
-    
     setInput('');
     if (textareaRef.current) textareaRef.current.style.height = 'auto';
-    setSelectedFile(null);
     setIsLoading(true);
 
-    const apiMessages = messages.map(msg => ({ role: msg.role, content: msg.content || '[Media]' })).concat({ role: 'user', content: textToSend });
-    
-    const responseText = await generateChatResponse(apiMessages);
-    
-    setMessages(prev => [...prev, { role: 'assistant', content: responseText }]);
+    const apiMessages = messages.map(msg => ({ role: msg.role, content: msg.content || '[Media]' }));
+
+    const isImage = selectedFile && selectedFile.type.startsWith('image/');
+
+    if (isImage) {
+      // Convert image to base64 and use Gemini Vision
+      const reader = new FileReader();
+      reader.readAsDataURL(selectedFile);
+      const base64 = await new Promise((resolve) => {
+        reader.onload = () => {
+          const result = reader.result;
+          const base64Str = result.split(',')[1];
+          resolve(base64Str);
+        };
+      });
+
+      const responseText = await generateVisionChatResponse({
+        imageBase64: base64,
+        mimeType: selectedFile.type,
+        text: input.trim(),
+        messages: apiMessages
+      });
+
+      setMessages(prev => [...prev, { role: 'assistant', content: responseText }]);
+    } else {
+      // Text-only or document — use DeepSeek
+      let textToSend = input.trim();
+      if (selectedFile) {
+        textToSend = `[Melampirkan file: ${selectedFile.name}]\n${textToSend}`;
+      }
+
+      const finalMessages = apiMessages.concat({ role: 'user', content: textToSend });
+      const responseText = await generateChatResponse(finalMessages);
+
+      setMessages(prev => [...prev, { role: 'assistant', content: responseText }]);
+    }
+
+    setSelectedFile(null);
     setIsLoading(false);
   };
 
