@@ -185,12 +185,6 @@ const Pricing = () => {
 
   const handlePlanClick = (plan) => {
     if (plan.id === 'bronze') {
-      // Free plan auto-activates immediately
-      const mockUser = {
-        name: 'Orang Tua Hebat',
-        avatar: 'https://ui-avatars.com/api/?name=Orang+Tua&background=0D8ABC&color=fff&rounded=true'
-      };
-      localStorage.setItem('robo_user', JSON.stringify(mockUser));
       localStorage.setItem('user_subscription', JSON.stringify({ plan: 'bronze', active: true }));
       window.dispatchEvent(new Event('subscriptionChange'));
       alert(lang === 'en' ? 'Bronze Plan activated successfully!' : 'Paket Bronze berhasil diaktifkan!');
@@ -202,11 +196,6 @@ const Pricing = () => {
   };
 
   const handlePaymentSuccess = (planId) => {
-    const mockUser = {
-      name: 'Orang Tua Hebat',
-      avatar: 'https://ui-avatars.com/api/?name=Orang+Tua&background=0D8ABC&color=fff&rounded=true'
-    };
-    localStorage.setItem('robo_user', JSON.stringify(mockUser));
     localStorage.setItem('user_subscription', JSON.stringify({ plan: planId, active: true }));
     window.dispatchEvent(new Event('subscriptionChange'));
   };

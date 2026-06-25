@@ -22,15 +22,26 @@ export default async function handler(req, res) {
 
   const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY || '';
 
+  if (!DEEPSEEK_API_KEY) {
+    return res.status(500).json({ error: 'API key not configured' });
+  }
+
   try {
-    const { message } = req.body;
+    const { message, messages } = req.body;
 
-    if (!message || typeof message !== 'string') {
-      return res.status(400).json({ error: 'Message is required' });
-    }
-
-    if (!DEEPSEEK_API_KEY) {
-      return res.status(500).json({ error: 'API key not configured' });
+    let finalMessages;
+    if (messages && Array.isArray(messages)) {
+      finalMessages = [
+        { role: 'system', content: SYSTEM_PROMPT },
+        ...messages
+      ];
+    } else if (message && typeof message === 'string') {
+      finalMessages = [
+        { role: 'system', content: SYSTEM_PROMPT },
+        { role: 'user', content: message }
+      ];
+    } else {
+      return res.status(400).json({ error: 'Message or messages required' });
     }
 
     const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
@@ -41,10 +52,7 @@ export default async function handler(req, res) {
       },
       body: JSON.stringify({
         model: 'deepseek-chat',
-        messages: [
-          { role: 'system', content: SYSTEM_PROMPT },
-          { role: 'user', content: message }
-        ],
+        messages: finalMessages,
         temperature: 0.3,
         max_tokens: 500
       })
