@@ -67,7 +67,7 @@ const Navbar = () => {
             <motion.a 
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              href="/screening" 
+              href="#" 
               className="bg-gradient-to-r from-primary-500 to-primary-600 text-white px-6 py-2.5 rounded-full font-medium shadow-md shadow-primary-500/30 hover:shadow-lg hover:shadow-primary-500/40 transition-all"
             >
               {t('navbar.start_screening')}
@@ -118,7 +118,7 @@ const Navbar = () => {
                   {t('navbar.login')}
                 </button>
               )}
-              <a href="/screening" onClick={() => setIsOpen(false)} className="block text-center px-4 py-2 text-base font-medium text-white bg-primary-500 rounded-full shadow-md">
+              <a href="#" onClick={() => setIsOpen(false)} className="block text-center px-4 py-2 text-base font-medium text-white bg-primary-500 rounded-full shadow-md">
                 {t('navbar.start_screening')}
               </a>
             </div>

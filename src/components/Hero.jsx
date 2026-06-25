@@ -125,10 +125,10 @@ const Hero = () => {
                   <motion.a 
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
-                    href="#progress-anak" 
+                    href="#" 
                     className="inline-flex justify-center items-center gap-1 sm:gap-2 bg-white/10 border border-white/30 text-white px-2 sm:px-6 md:px-8 py-2 sm:py-3.5 md:py-4 rounded-full font-bold text-[10px] sm:text-base md:text-lg hover:bg-white/20 backdrop-blur-sm transition-colors"
                   >
-                    {i18n.language === 'en' ? 'Child Progress' : 'Progress Anak'}
+                    {i18n.language === 'en' ? 'Play Now' : 'Mainkan Sekarang'}
                   </motion.a>
                 </div>
               </motion.div>
