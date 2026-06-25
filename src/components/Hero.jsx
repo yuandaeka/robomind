@@ -1,0 +1,171 @@
+import { useState, useRef } from 'react';
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { Navigation, Pagination, Autoplay, EffectFade } from 'swiper/modules';
+import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
+import { Play, Pause, ChevronLeft, ChevronRight } from 'lucide-react';
+import 'swiper/css';
+import 'swiper/css/navigation';
+import 'swiper/css/pagination';
+import 'swiper/css/effect-fade';
+
+const Hero = () => {
+  const [isPlaying, setIsPlaying] = useState(true);
+  const swiperRef = useRef(null);
+
+  const togglePlay = () => {
+    if (isPlaying) {
+      swiperRef.current?.swiper?.autoplay?.stop();
+    } else {
+      swiperRef.current?.swiper?.autoplay?.start();
+    }
+    setIsPlaying(!isPlaying);
+  };
+
+  const { i18n } = useTranslation();
+
+  const slides = [
+    {
+      id: 1,
+      tag: i18n.language === 'en' ? "FUTURE EDUCATION PLATFORM" : "PLATFORM EDUKASI MASA DEPAN",
+      title: i18n.language === 'en' ? "Hone Children's Cognitive & Logic" : "Asah Potensi Kognitif & Logika Anak",
+      subtitle: i18n.language === 'en' ? "Connect your child's game, monitor development metrics in real-time, and get specific recommendations from child psychologists." : "Hubungkan game anak Anda, pantau metrik perkembangannya secara real-time, dan dapatkan rekomendasi spesifik dari psikolog anak.",
+      img: "https://images.unsplash.com/photo-1577896851231-70ef18881754?w=1920&auto=format&fit=crop&q=80"
+    },
+    {
+      id: 2,
+      tag: i18n.language === 'en' ? "AI GAME TECHNOLOGY" : "TEKNOLOGI GAME AI",
+      title: i18n.language === 'en' ? "Exciting Adventure Full of Challenges" : "Petualangan Seru Penuh Tantangan",
+      subtitle: i18n.language === 'en' ? "Play while honing coding logic. Let your little one's imagination fly high without limits." : "Bermain sambil mengasah logika coding. Biarkan imajinasi si kecil terbang tinggi tanpa batas.",
+      img: "https://images.unsplash.com/photo-1535378917042-10a22c95931a?w=1920&auto=format&fit=crop&q=80"
+    },
+    {
+      id: 3,
+      tag: i18n.language === 'en' ? "REAL-TIME MONITORING" : "PANTUAN REAL-TIME",
+      title: i18n.language === 'en' ? "See Development Directly" : "Lihat Perkembangan Secara Langsung",
+      subtitle: i18n.language === 'en' ? "Access an exclusive dashboard to track language competence, focus, and problem solving." : "Akses dashboard eksklusif untuk melacak kompetensi bahasa, fokus, dan pemecahan masalah.",
+      img: "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=1920&auto=format&fit=crop&q=80"
+    }
+  ];
+
+  return (
+    <section id="beranda" className="relative w-full h-[40vh] min-h-[320px] sm:h-[50vh] md:h-[60vh] lg:h-[600px] bg-black overflow-hidden group">
+      <Swiper
+        ref={swiperRef}
+        modules={[Navigation, Pagination, Autoplay, EffectFade]}
+        effect="fade"
+        speed={1000}
+        autoplay={{ delay: 5000, disableOnInteraction: false }}
+        loop={true}
+        pagination={{
+          el: '.custom-swiper-pagination',
+          clickable: true,
+          renderBullet: (index, className) => {
+            return `<span class="${className} custom-bullet"></span>`;
+          }
+        }}
+        navigation={{
+          prevEl: '.custom-swiper-prev',
+          nextEl: '.custom-swiper-next',
+        }}
+        className="w-full h-full"
+      >
+        {slides.map((slide) => (
+          <SwiperSlide key={slide.id} className="w-full h-full">
+            <div className="absolute inset-0 w-full h-full overflow-hidden">
+              <img src={slide.img} alt={slide.title} className="w-full h-full object-cover object-center scale-105 animate-slow-zoom" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/20" />
+            </div>
+
+            <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-3 sm:px-6 lg:px-8 z-10">
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, ease: "easeOut" }}
+                className="max-w-4xl w-full"
+              >
+                <span className="inline-block py-1 px-3 sm:py-1.5 sm:px-4 rounded-full bg-white/10 backdrop-blur-md text-white font-bold text-[8px] sm:text-[10px] md:text-xs tracking-[0.15em] sm:tracking-[0.2em] mb-2 sm:mb-4 md:mb-6 uppercase border border-white/20">
+                  {slide.tag}
+                </span>
+                <h1 className="text-lg sm:text-3xl md:text-5xl lg:text-6xl font-extrabold text-white leading-tight sm:leading-[1.15] mb-2 sm:mb-4 md:mb-6 font-fredoka uppercase tracking-tight drop-shadow-2xl">
+                  {slide.title}
+                </h1>
+                <p className="text-xs sm:text-base md:text-xl text-gray-200 mb-3 sm:mb-6 md:mb-10 font-outfit max-w-2xl mx-auto drop-shadow-md px-0 sm:px-2 leading-relaxed">
+                  {slide.subtitle}
+                </p>
+                
+                <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:justify-center sm:gap-4 w-full px-0 sm:px-4">
+                  <motion.a 
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    href="/screening" 
+                    className="inline-flex justify-center items-center bg-white text-black px-2 sm:px-6 md:px-8 py-2 sm:py-3.5 md:py-4 rounded-full font-bold text-[10px] sm:text-base md:text-lg hover:bg-gray-200 transition-colors"
+                  >
+                    {i18n.language === 'en' ? 'Try Early Screening' : 'Coba Skrining Awal'}
+                  </motion.a>
+                  
+                  <motion.button 
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="inline-flex justify-center items-center gap-1 sm:gap-2 bg-transparent border border-white text-white px-2 sm:px-6 md:px-8 py-2 sm:py-3.5 md:py-4 rounded-full font-bold text-[10px] sm:text-base md:text-lg hover:bg-white/10 backdrop-blur-sm transition-colors"
+                  >
+                    <Play size={12} className="sm:size-[18]" fill="currentColor" />
+                    {i18n.language === 'en' ? 'Watch Demo' : 'Tonton Demo'}
+                  </motion.button>
+                  
+                  <motion.a 
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    href="/chatbot" 
+                    className="inline-flex justify-center items-center gap-1 sm:gap-2 bg-white/10 border border-white/30 text-white px-2 sm:px-6 md:px-8 py-2 sm:py-3.5 md:py-4 rounded-full font-bold text-[10px] sm:text-base md:text-lg hover:bg-white/20 backdrop-blur-sm transition-colors"
+                  >
+                    {i18n.language === 'en' ? 'Ask Chatbot' : 'Tanya Chatbot'}
+                  </motion.a>
+                  
+                  <motion.a 
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    href="#progress-anak" 
+                    className="inline-flex justify-center items-center gap-1 sm:gap-2 bg-white/10 border border-white/30 text-white px-2 sm:px-6 md:px-8 py-2 sm:py-3.5 md:py-4 rounded-full font-bold text-[10px] sm:text-base md:text-lg hover:bg-white/20 backdrop-blur-sm transition-colors"
+                  >
+                    {i18n.language === 'en' ? 'Child Progress' : 'Progress Anak'}
+                  </motion.a>
+                </div>
+              </motion.div>
+            </div>
+          </SwiperSlide>
+        ))}
+      </Swiper>
+
+      <div className="absolute bottom-3 md:bottom-8 left-1/2 -translate-x-1/2 md:left-auto md:translate-x-0 md:right-8 z-20 flex items-center gap-2 md:gap-6">
+        <button 
+          onClick={togglePlay}
+          className="w-6 h-6 md:w-10 md:h-10 rounded-full bg-black/40 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white hover:text-black transition-colors"
+          aria-label={isPlaying ? "Pause autoplay" : "Play autoplay"}
+        >
+          {isPlaying ? <Pause size={10} className="md:size-[14]" fill="currentColor" /> : <Play size={10} className="md:size-[14] ml-px" fill="currentColor" />}
+        </button>
+
+        <div className="custom-swiper-pagination flex gap-1 md:gap-2 items-center"></div>
+
+        <div className="flex items-center gap-1 md:gap-2">
+          <button className="custom-swiper-prev w-6 h-6 md:w-10 md:h-10 rounded-full bg-black/40 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white hover:text-black transition-colors">
+            <ChevronLeft size={12} className="md:size-[16]" />
+          </button>
+          <button className="custom-swiper-next w-6 h-6 md:w-10 md:h-10 rounded-full bg-black/40 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white hover:text-black transition-colors">
+            <ChevronRight size={12} className="md:size-[16]" />
+          </button>
+        </div>
+      </div>
+      
+      <style>{`
+        .custom-bullet { width: 6px; height: 6px; background-color: rgba(255,255,255,0.4); border-radius: 50%; cursor: pointer; transition: all 0.3s ease; }
+        .swiper-pagination-bullet-active.custom-bullet { background-color: white; width: 18px; border-radius: 12px; }
+        @keyframes slow-zoom { 0% { transform: scale(1); } 100% { transform: scale(1.1); } }
+        .animate-slow-zoom { animation: slow-zoom 20s ease-in-out infinite alternate; }
+      `}</style>
+    </section>
+  );
+};
+
+export default Hero;

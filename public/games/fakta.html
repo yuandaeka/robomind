@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agen Fakta</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #e8f5e9; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+        .game-container { background: white; padding: 40px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); max-width: 600px; text-align: center; }
+        h1 { color: #2e7d32; margin-bottom: 5px; }
+        .score { font-size: 1.2rem; color: #666; margin-bottom: 20px; font-weight: bold; }
+        .news-box { background: #f1f8e9; padding: 20px; border-left: 5px solid #4caf50; font-size: 1.3rem; margin-bottom: 30px; font-style: italic; min-height: 80px; display: flex; align-items: center; justify-content: center; }
+        .choices { display: flex; gap: 20px; justify-content: center; }
+        button { border: none; padding: 15px 40px; border-radius: 30px; font-size: 1.2rem; font-weight: bold; cursor: pointer; transition: transform 0.2s; color: white; }
+        button:hover { transform: scale(1.05); }
+        .btn-fakta { background-color: #4caf50; }
+        .btn-hoax { background-color: #f44336; }
+        .result { margin-top: 20px; font-weight: bold; font-size: 1.2rem; min-height: 30px; }
+        .correct { color: #4caf50; }
+        .wrong { color: #f44336; }
+        .back-btn { margin-top: 30px; background-color: #95a5a6; display: inline-block; text-decoration: none; padding: 10px 20px; color: white; border-radius: 5px; font-size: 1rem; font-weight: normal;}
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>Agen Fakta</h1>
+        <div class="score">Skor: <span id="score">0</span></div>
+        <div class="news-box" id="news-text">Memuat berita...</div>
+        <div class="choices" id="choices">
+            <button class="btn-fakta" onclick="checkAnswer(true)">FAKTA</button>
+            <button class="btn-hoax" onclick="checkAnswer(false)">HOAX</button>
+        </div>
+        <div class="result" id="result"></div>
+        <a href="/games" class="back-btn">Kembali ke Fitur Game</a>
+    </div>
+
+    <script>
+        const newsData = [
+            { text: "Makan wortel dapat meningkatkan tajam penglihatan secara drastis dalam semalam.", isFact: false, explanation: "Hoax! Wortel baik untuk mata karena vitamin A, tapi tidak bisa menyembuhkan rabun secara instan." },
+            { text: "Bumi mengelilingi Matahari.", isFact: true, explanation: "Fakta! Ini adalah konsep dasar heliosentris dalam sains." },
+            { text: "Pesan berantai di WhatsApp yang menyuruh membagikan pesan ke 10 orang agar tidak kena sial.", isFact: false, explanation: "Hoax! Itu hanya spam atau pesan berantai palsu." },
+            { text: "Air mendidih pada suhu 100 derajat Celcius pada tekanan atmosfer standar.", isFact: true, explanation: "Fakta! Ini adalah sifat dasar fisika air." },
+            { text: "Mengecas HP semalaman akan membuat baterai meledak otomatis.", isFact: false, explanation: "Hoax! Smartphone modern memiliki sirkuit pemutus arus saat baterai sudah penuh." }
+        ];
+
+        let currentQuestion = 0;
+        let score = 0;
+
+        function loadQuestion() {
+            if (currentQuestion >= newsData.length) {
+                document.getElementById('news-text').innerHTML = "<b>Permainan Selesai!</b><br>Skor akhirmu: " + score;
+                document.getElementById('choices').style.display = 'none';
+                document.getElementById('result').textContent = "";
+                return;
+            }
+            document.getElementById('news-text').textContent = `"${newsData[currentQuestion].text}"`;
+            document.getElementById('result').textContent = "";
+            document.getElementById('choices').style.display = 'flex';
+        }
+
+        function checkAnswer(userSaysFact) {
+            const actualAnswer = newsData[currentQuestion].isFact;
+            const resultEl = document.getElementById('result');
+            
+            if (userSaysFact === actualAnswer) {
+                score += 10;
+                document.getElementById('score').textContent = score;
+                resultEl.textContent = "Benar! " + newsData[currentQuestion].explanation;
+                resultEl.className = "result correct";
+            } else {
+                resultEl.textContent = "Salah! " + newsData[currentQuestion].explanation;
+                resultEl.className = "result wrong";
+            }
+
+            document.getElementById('choices').style.display = 'none';
+            currentQuestion++;
+            setTimeout(loadQuestion, 3000);
+        }
+
+        window.onload = loadQuestion;
+    </script>
+</body>
+</html>

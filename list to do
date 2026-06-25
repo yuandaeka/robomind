@@ -1,0 +1,55 @@
+# Epic To-Do List: Robo Mind React + Vite Development
+**Methodology:** Agile Sprint Checklists
+**Target Project:** Robo Mind Interactive Landing Page
+
+---
+
+## 🚀 Sprint 1: Setup Workspace & Core Architecture
+- [ ] Initialize a new React project using Vite: `npm create vite@latest robo-mind -- --template react`
+- [ ] Install production UI dependencies: `npm install tailwindcss postcss autoprefixer framer-motion swiper chart.js react-chartjs-2 lucide-react`
+- [ ] Initialize Tailwind CSS config structure: `npx tailwindcss init -p`
+- [ ] Configure `tailwind.config.js` to include custom fonts (`Fredoka`, `Outfit`) and Robo Mind color palette (Cyber Blue, Playful Orange, Lime Green, Dark Navy).
+- [ ] Clean up default boilerplate templates (`App.css`, boilerplate text inside `App.jsx`).
+- [ ] Establish directory workspace pathing structure:
+  ├── src/
+  │   ├── assets/
+  │   ├── components/
+  │   ├── hooks/
+  │   ├── App.jsx
+  │   └── main.jsx
+
+---
+
+## 🎨 Sprint 2: Global Layout, Navbar, & Advanced Hero Section
+- [ ] Create a responsive `<Navbar />` component using Tailwind flexbox with sticky position tracking.
+- [ ] Implement toggle state logic for the mobile hamburger menu view.
+- [ ] Build the `<Hero />` component layout structure with custom typographic sizing for headings.
+- [ ] Integrate primary call-to-action (CTA) button with custom micro-interactions (magnetic or bounce effects).
+- [ ] Implement Framer Motion infinite loop configs (`repeat: Infinity, repeatType: "reverse"`) on the robot graphic element to create a smooth, levitating flight simulation look.
+
+---
+
+## 🔄 Sprint 3: Interactive Components (Game Feature Swiper & Screening Pillars)
+- [ ] Create the `<GameSlider />` component using the Swiper React integration module.
+- [ ] Configure Swiper runtime properties: `slidesPerView: "auto"`, `centeredSlides: true`, `spaceBetween: 30`, and navigation controls.
+- [ ] Add active slide CSS conditional injection logic to upscale the current card element by 105% and inject an absolute backdrop glow layer.
+- [ ] Create the `<ScreeningPillars />` responsive 3-column layout grid wrapper.
+- [ ] Apply scroll-triggered variant animations using Framer Motion (`whileInView`, `viewport: { once: true }`) to stagger-load the 3 screening columns on view entry.
+
+---
+
+## 📊 Sprint 4: Parent Metrics Dashboard & SaaS Pricing Tiers
+- [ ] Create the comprehensive `<ParentDashboard />` main workspace wrapper.
+- [ ] Integrate `Radar` from `react-chartjs-2` with options configuring responsive scales, custom font rendering (`Outfit`), and grid coloring.
+- [ ] Implement a dynamic transition trigger on the chart data dataset so it scales out smoothly upon scroll-entry.
+- [ ] Build a mock state switcher for the **Robot Progress Graphic** that modifies asset paths or color tones depending on a simulated difficulty index value.
+- [ ] Build the `<Pricing />` modular tier table component detailing Free vs Premium SaaS packages.
+
+---
+
+## 🤖 Sprint 5: AI Chatbot Floating Widget & Production Deployment
+- [ ] Create the absolute-positioned floating `<ChatbotWidget />` in the viewport's bottom-right bounds.
+- [ ] Implement a boolean toggle state for opening/closing the chat modal box with slide-up framer-motion transitions.
+- [ ] Restructure the global typography rules within `index.css` to match fallback font settings perfectly.
+- [ ] Revamp the final global `<Footer />` layout using dark navy background themes and verified modern structural semantic tags.
+- [ ] Execute compilation verify command: `npm run build` to guarantee zero typescript or asset-path reference build breaks before deploying.

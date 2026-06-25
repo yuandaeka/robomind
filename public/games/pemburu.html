@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pemburu Ilmu</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #fff3e0; margin: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; }
+        h1 { color: #e65100; margin: 10px 0; }
+        .stats { font-size: 1.2rem; font-weight: bold; color: #333; margin-bottom: 10px; }
+        canvas { background-color: #87CEEB; border-radius: 10px; box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
+        .instructions { margin-top: 15px; color: #666; font-weight: bold; }
+        .back-btn { margin-top: 15px; background-color: #ff9800; display: inline-block; text-decoration: none; padding: 10px 20px; color: white; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <h1>Pemburu Ilmu</h1>
+    <div class="stats">Skor: <span id="score">0</span> | Item: <span id="itemName">-</span></div>
+    <canvas id="gameCanvas" width="800" height="400"></canvas>
+    <div class="instructions">Gunakan spasi atau klik untuk melompat. Tangkap buku dan planet!</div>
+    <a href="/games" class="back-btn">Kembali ke Fitur Game</a>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let score = 0;
+        let isGameOver = false;
+
+        // Player
+        const player = {
+            x: 50, y: 300, width: 40, height: 40,
+            dy: 0, gravity: 0.6, jumpPower: -12, isJumping: false
+        };
+
+        // Obstacles & Items
+        let obstacles = [];
+        let items = [];
+        const itemNames = ['Bumi', 'Mars', 'Jantung', 'Otak', 'Sel'];
+        
+        let frameCount = 0;
+
+        function jump() {
+            if (!player.isJumping) {
+                player.dy = player.jumpPower;
+                player.isJumping = true;
+            }
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' && !isGameOver) jump();
+            if (e.code === 'Space' && isGameOver) resetGame();
+        });
+        canvas.addEventListener('mousedown', () => {
+            if (!isGameOver) jump();
+            else resetGame();
+        });
+
+        function spawnEntity() {
+            if (frameCount % 100 === 0) {
+                // Spawn obstacle
+                obstacles.push({
+                    x: canvas.width,
+                    y: 320,
+                    width: 30,
+                    height: 40,
+                    speed: 4 + (score * 0.1) // Semakin lama semakin cepat
+                });
+            }
+
+            if (frameCount % 150 === 0) {
+                // Spawn item (floating)
+                items.push({
+                    x: canvas.width + 100,
+                    y: 200 + Math.random() * 50,
+                    width: 25,
+                    height: 25,
+                    speed: 4 + (score * 0.1),
+                    name: itemNames[Math.floor(Math.random() * itemNames.length)]
+                });
+            }
+        }
+
+        function update() {
+            if (isGameOver) return;
+
+            // Player physics
+            player.dy += player.gravity;
+            player.y += player.dy;
+
+            // Ground collision
+            if (player.y + player.height > 360) {
+                player.y = 360 - player.height;
+                player.dy = 0;
+                player.isJumping = false;
+            }
+
+            spawnEntity();
+
+            // Move obstacles
+            for (let i = 0; i < obstacles.length; i++) {
+                let obs = obstacles[i];
+                obs.x -= obs.speed;
+
+                // Collision with obstacle
+                if (player.x < obs.x + obs.width &&
+                    player.x + player.width > obs.x &&
+                    player.y < obs.y + obs.height &&
+                    player.y + player.height > obs.y) {
+                    isGameOver = true;
+                }
+            }
+
+            // Move items
+            for (let i = 0; i < items.length; i++) {
+                let item = items[i];
+                item.x -= item.speed;
+
+                // Collision with item
+                if (player.x < item.x + item.width &&
+                    player.x + player.width > item.x &&
+                    player.y < item.y + item.height &&
+                    player.y + player.height > item.y) {
+                    score += 10;
+                    document.getElementById('score').textContent = score;
+                    document.getElementById('itemName').textContent = item.name;
+                    items.splice(i, 1);
+                    i--;
+                }
+            }
+
+            // Cleanup off-screen
+            obstacles = obstacles.filter(obs => obs.x + obs.width > 0);
+            items = items.filter(item => item.x + item.width > 0);
+
+            frameCount++;
+        }
+
+        function draw() {
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw ground
+            ctx.fillStyle = '#4CAF50';
+            ctx.fillRect(0, 360, canvas.width, 40);
+
+            // Draw player (Robot)
+            ctx.fillStyle = '#ff9800'; // Orange robot
+            ctx.fillRect(player.x, player.y, player.width, player.height);
+            // Robot eye
+            ctx.fillStyle = 'white';
+            ctx.fillRect(player.x + 25, player.y + 10, 10, 10);
+            ctx.fillStyle = 'black';
+            ctx.fillRect(player.x + 30, player.y + 12, 5, 5);
+
+            // Draw obstacles
+            ctx.fillStyle = '#f44336';
+            obstacles.forEach(obs => {
+                ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
+            });
+
+            // Draw items
+            ctx.fillStyle = '#FFD700'; // Gold items
+            items.forEach(item => {
+                ctx.beginPath();
+                ctx.arc(item.x + item.width/2, item.y + item.height/2, item.width/2, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            if (isGameOver) {
+                ctx.fillStyle = 'rgba(0,0,0,0.7)';
+                ctx.fillRect(0,0, canvas.width, canvas.height);
+                ctx.fillStyle = 'white';
+                ctx.font = '40px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('GAME OVER', canvas.width/2, canvas.height/2);
+                ctx.font = '20px Arial';
+                ctx.fillText('Tekan Spasi untuk main lagi', canvas.width/2, canvas.height/2 + 40);
+            }
+        }
+
+        function gameLoop() {
+            update();
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+
+        function resetGame() {
+            score = 0;
+            document.getElementById('score').textContent = score;
+            document.getElementById('itemName').textContent = '-';
+            obstacles = [];
+            items = [];
+            frameCount = 0;
+            player.y = 300;
+            player.dy = 0;
+            isGameOver = false;
+        }
+
+        gameLoop();
+    </script>
+</body>
+</html>

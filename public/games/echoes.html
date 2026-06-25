@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Echoes of Choice</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f8ff; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+        .game-container { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); max-width: 600px; text-align: center; }
+        h1 { color: #2c3e50; }
+        p#scenario { font-size: 1.2rem; color: #34495e; margin-bottom: 30px; min-height: 80px; }
+        .choices { display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; }
+        button { background-color: #3498db; color: white; border: none; padding: 15px 20px; border-radius: 8px; font-size: 1rem; cursor: pointer; transition: background 0.3s; flex: 1; min-width: 200px; }
+        button:hover { background-color: #2980b9; }
+        .back-btn { margin-top: 30px; background-color: #95a5a6; display: inline-block; text-decoration: none; padding: 10px 20px; color: white; border-radius: 5px; }
+        .back-btn:hover { background-color: #7f8c8d; }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>Echoes of Choice</h1>
+        <div id="game-content">
+            <p id="scenario">Kamu melihat temanmu, Budi, sedang diejek oleh sekelompok anak yang lebih besar di kantin. Budi terlihat sangat sedih dan ketakutan.</p>
+            <div class="choices" id="choices-container">
+                <button onclick="chooseAction('help')">Berdiri dan membela Budi</button>
+                <button onclick="chooseAction('ignore')">Pura-pura tidak melihat dan pergi</button>
+                <button onclick="chooseAction('report')">Lapor ke guru diam-diam</button>
+            </div>
+        </div>
+        <a href="/games" class="back-btn">Kembali ke Fitur Game</a>
+    </div>
+
+    <script>
+        function chooseAction(action) {
+            const scenarioEl = document.getElementById('scenario');
+            const choicesEl = document.getElementById('choices-container');
+            
+            if (action === 'help') {
+                scenarioEl.innerHTML = "<strong>Empati Terpuji!</strong><br><br>Kamu membela Budi. Anak-anak nakal itu terkejut dan akhirnya pergi. Budi sangat berterima kasih kepadamu. Kamu adalah pahlawan hari ini!";
+            } else if (action === 'ignore') {
+                scenarioEl.innerHTML = "<strong>Kurang Empati.</strong><br><br>Kamu memilih pergi. Budi terus diejek dan merasa sangat kesepian. Terkadang, diamnya orang baik adalah hal yang paling menyakitkan.";
+            } else if (action === 'report') {
+                scenarioEl.innerHTML = "<strong>Tindakan Bijaksana!</strong><br><br>Kamu melapor ke guru. Guru segera datang dan menghentikan pembulian. Budi selamat tanpa kamu harus membahayakan dirimu sendiri.";
+            }
+            
+            choicesEl.innerHTML = '<button onclick="location.reload()">Main Lagi</button>';
+        }
+    </script>
+</body>
+</html>
