@@ -158,7 +158,7 @@ export default defineConfig(({ mode }) => {
                     'Authorization': `Bearer ${groqKey}`
                   },
                   body: JSON.stringify({
-                    model: 'llama-4-scout-30b',
+                    model: 'meta-llama/llama-4-scout-17b-16e-instruct',
                     messages: [
                       { role: 'system', content: VISION_SYSTEM_PROMPT },
                       { role: 'user', content: userContent }
