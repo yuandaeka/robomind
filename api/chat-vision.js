@@ -27,7 +27,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { imageBase64, mimeType, text, messages } = req.body;
+    const { imageDataUrl, text, messages } = req.body;
 
     let userText = text || '';
     if (messages && Array.isArray(messages)) {
@@ -40,10 +40,10 @@ export default async function handler(req, res) {
     const userContent = [];
     userContent.push({ type: 'text', text: userText || 'Analisis gambar ini dalam konteks Robo Mind.' });
 
-    if (imageBase64 && mimeType) {
+    if (imageDataUrl) {
       userContent.push({
         type: 'image_url',
-        image_url: { url: `data:${mimeType};base64,${imageBase64}` }
+        image_url: { url: imageDataUrl }
       });
     }
 

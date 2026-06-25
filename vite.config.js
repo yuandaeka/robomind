@@ -124,7 +124,7 @@ export default defineConfig(({ mode }) => {
             req.on('data', chunk => { body += chunk; });
             req.on('end', async () => {
               try {
-                const { imageBase64, mimeType, text, messages } = JSON.parse(body);
+                const { imageDataUrl, text, messages } = JSON.parse(body);
 
                 const groqKey = env.GROQ_API_KEY || '';
                 if (!groqKey) {
@@ -144,10 +144,10 @@ export default defineConfig(({ mode }) => {
                 const userContent = [];
                 userContent.push({ type: 'text', text: userText || 'Analisis gambar ini dalam konteks Robo Mind.' });
 
-                if (imageBase64 && mimeType) {
+                if (imageDataUrl) {
                   userContent.push({
                     type: 'image_url',
-                    image_url: { url: `data:${mimeType};base64,${imageBase64}` }
+                    image_url: { url: imageDataUrl }
                   });
                 }
 

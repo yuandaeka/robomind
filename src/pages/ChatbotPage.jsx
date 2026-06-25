@@ -161,20 +161,14 @@ const ChatbotPage = () => {
     const isImage = selectedFile && selectedFile.type.startsWith('image/');
 
     if (isImage) {
-      // Convert image to base64 and use Gemini Vision
       const reader = new FileReader();
       reader.readAsDataURL(selectedFile);
-      const base64 = await new Promise((resolve) => {
-        reader.onload = () => {
-          const result = reader.result;
-          const base64Str = result.split(',')[1];
-          resolve(base64Str);
-        };
+      const imageDataUrl = await new Promise((resolve) => {
+        reader.onload = () => resolve(reader.result);
       });
 
       const responseText = await generateVisionChatResponse({
-        imageBase64: base64,
-        mimeType: selectedFile.type,
+        imageDataUrl,
         text: input.trim(),
         messages: apiMessages
       });
