@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Menu, X, Bot } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
@@ -6,8 +6,43 @@ import { useTranslation } from 'react-i18next';
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoginOpen, setIsLoginOpen] = useState(false);
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(() => {
+    try {
+      const stored = localStorage.getItem('robo_user');
+      return stored ? JSON.parse(stored) : null;
+    } catch {
+      return null;
+    }
+  });
+  const [subscription, setSubscription] = useState(() => {
+    try {
+      const stored = localStorage.getItem('user_subscription');
+      return stored ? JSON.parse(stored) : null;
+    } catch {
+      return null;
+    }
+  });
+
   const { t, i18n } = useTranslation();
+
+  useEffect(() => {
+    const handleSubChange = () => {
+      try {
+        const storedUser = localStorage.getItem('robo_user');
+        setUser(storedUser ? JSON.parse(storedUser) : null);
+        
+        const storedSub = localStorage.getItem('user_subscription');
+        setSubscription(storedSub ? JSON.parse(storedSub) : null);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    window.addEventListener('subscriptionChange', handleSubChange);
+    return () => {
+      window.removeEventListener('subscriptionChange', handleSubChange);
+    };
+  }, []);
 
   const toggleLanguage = () => {
     const nextLang = i18n.language === 'id' ? 'en' : 'id';
@@ -15,11 +50,57 @@ const Navbar = () => {
   };
 
   const handleLogin = (provider) => {
-    setUser({
+    const mockUser = {
       name: 'Orang Tua Hebat',
       avatar: 'https://ui-avatars.com/api/?name=Orang+Tua&background=0D8ABC&color=fff&rounded=true'
-    });
+    };
+    localStorage.setItem('robo_user', JSON.stringify(mockUser));
+    setUser(mockUser);
     setIsLoginOpen(false);
+    window.dispatchEvent(new Event('subscriptionChange'));
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('robo_user');
+    localStorage.removeItem('user_subscription');
+    setUser(null);
+    setSubscription(null);
+    window.dispatchEvent(new Event('subscriptionChange'));
+  };
+
+  const renderBadge = () => {
+    if (!subscription || !subscription.active) return null;
+    
+    const plan = subscription.plan;
+    let badgeStyle = '';
+    let label = '';
+    
+    switch (plan) {
+      case 'bronze':
+        badgeStyle = 'bg-gradient-to-r from-orange-400 to-amber-600 text-white';
+        label = 'Bronze';
+        break;
+      case 'silver':
+        badgeStyle = 'bg-gradient-to-r from-slate-300 via-slate-400 to-slate-500 text-white shadow-sm';
+        label = 'Silver';
+        break;
+      case 'gold':
+        badgeStyle = 'bg-gradient-to-r from-amber-400 via-amber-500 to-yellow-600 text-white shadow-md shadow-amber-500/25 ring-1 ring-amber-400';
+        label = 'Gold';
+        break;
+      case 'platinum':
+        badgeStyle = 'bg-gradient-to-r from-indigo-500 via-purple-600 to-pink-600 text-white shadow-lg shadow-indigo-500/25 ring-1 ring-indigo-400 animate-pulse';
+        label = 'Platinum';
+        break;
+      default:
+        return null;
+    }
+
+    return (
+      <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-md tracking-wider ${badgeStyle}`}>
+        {label}
+      </span>
+    );
   };
 
   return (
@@ -56,8 +137,11 @@ const Navbar = () => {
             {user ? (
               <div className="flex items-center gap-3 cursor-pointer group">
                 <img src={user.avatar} alt="Profile" className="w-10 h-10 rounded-full border-2 border-primary-100 group-hover:border-primary-500 transition-colors" />
-                <span className="font-bold text-gray-800 font-outfit">{user.name}</span>
-                <button onClick={() => setUser(null)} className="text-xs text-red-500 hover:text-red-700 ml-2 font-bold px-2 py-1 bg-red-50 rounded-md">{t('navbar.logout')}</button>
+                <span className="font-bold text-gray-800 font-outfit flex items-center gap-2">
+                  {user.name}
+                  {renderBadge()}
+                </span>
+                <button onClick={handleLogout} className="text-xs text-red-500 hover:text-red-700 ml-2 font-bold px-2 py-1 bg-red-50 rounded-md">{t('navbar.logout')}</button>
               </div>
             ) : (
               <button onClick={() => setIsLoginOpen(true)} className="text-gray-600 hover:text-gray-900 font-medium transition-colors">
@@ -107,9 +191,12 @@ const Navbar = () => {
                 <div className="flex flex-col gap-3">
                   <div className="flex items-center justify-center gap-3 p-3 bg-gray-50 rounded-xl border border-gray-100">
                     <img src={user.avatar} alt="Profile" className="w-10 h-10 rounded-full" />
-                    <span className="font-bold text-gray-800 font-outfit">{user.name}</span>
+                    <div className="flex flex-col items-start gap-1">
+                      <span className="font-bold text-gray-800 font-outfit">{user.name}</span>
+                      {renderBadge()}
+                    </div>
                   </div>
-                  <button onClick={() => { setIsOpen(false); setUser(null); }} className="block w-full text-center px-4 py-2 text-base font-medium text-red-600 border border-red-200 rounded-full hover:bg-red-50">
+                  <button onClick={() => { setIsOpen(false); handleLogout(); }} className="block w-full text-center px-4 py-2 text-base font-medium text-red-600 border border-red-200 rounded-full hover:bg-red-50">
                     {t('navbar.logout_acc')}
                   </button>
                 </div>

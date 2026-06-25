@@ -1,6 +1,8 @@
+import React, { useState } from 'react';
 import { Check, Star, Zap, Award } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
+import PaymentModal from './PaymentModal';
 
 const plans = [
   {
@@ -36,7 +38,7 @@ const plans = [
       desc: 'text-gray-600',
       featureText: 'text-gray-600',
       featureIcon: 'text-green-500',
-      button: 'bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold'
+      button: 'bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold font-outfit'
     },
     icon: 'star',
     iconColor: 'text-orange-500'
@@ -74,7 +76,7 @@ const plans = [
       desc: 'text-slate-600',
       featureText: 'text-slate-600',
       featureIcon: 'text-primary-500',
-      button: 'bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold'
+      button: 'bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold font-outfit'
     },
     icon: 'zap',
     iconColor: 'text-slate-500'
@@ -117,7 +119,7 @@ const plans = [
       desc: 'text-gray-300',
       featureText: 'text-gray-300',
       featureIcon: 'text-amber-400',
-      button: 'bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-gray-950 font-bold shadow-lg shadow-amber-500/20'
+      button: 'bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-gray-950 font-bold shadow-lg shadow-amber-500/20 font-outfit'
     },
     icon: 'star',
     iconColor: 'text-amber-400 fill-amber-400'
@@ -155,7 +157,7 @@ const plans = [
       desc: 'text-gray-300',
       featureText: 'text-gray-300',
       featureIcon: 'text-indigo-400',
-      button: 'bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-400 hover:to-purple-500 text-white font-bold shadow-lg shadow-indigo-500/20'
+      button: 'bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-400 hover:to-purple-500 text-white font-bold shadow-lg shadow-indigo-500/20 font-outfit'
     },
     icon: 'award',
     iconColor: 'text-indigo-400'
@@ -177,6 +179,37 @@ const getIcon = (iconName, colorClass) => {
 const Pricing = () => {
   const { i18n } = useTranslation();
   const lang = i18n.language === 'en' ? 'en' : 'id';
+
+  const [isPaymentOpen, setIsPaymentOpen] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState(null);
+
+  const handlePlanClick = (plan) => {
+    if (plan.id === 'bronze') {
+      // Free plan auto-activates immediately
+      const mockUser = {
+        name: 'Orang Tua Hebat',
+        avatar: 'https://ui-avatars.com/api/?name=Orang+Tua&background=0D8ABC&color=fff&rounded=true'
+      };
+      localStorage.setItem('robo_user', JSON.stringify(mockUser));
+      localStorage.setItem('user_subscription', JSON.stringify({ plan: 'bronze', active: true }));
+      window.dispatchEvent(new Event('subscriptionChange'));
+      alert(lang === 'en' ? 'Bronze Plan activated successfully!' : 'Paket Bronze berhasil diaktifkan!');
+      return;
+    }
+
+    setSelectedPlan(plan);
+    setIsPaymentOpen(true);
+  };
+
+  const handlePaymentSuccess = (planId) => {
+    const mockUser = {
+      name: 'Orang Tua Hebat',
+      avatar: 'https://ui-avatars.com/api/?name=Orang+Tua&background=0D8ABC&color=fff&rounded=true'
+    };
+    localStorage.setItem('robo_user', JSON.stringify(mockUser));
+    localStorage.setItem('user_subscription', JSON.stringify({ plan: planId, active: true }));
+    window.dispatchEvent(new Event('subscriptionChange'));
+  };
 
   return (
     <section id="berlangganan" className="py-14 sm:py-20 lg:py-24 bg-white relative overflow-hidden">
@@ -250,7 +283,10 @@ const Pricing = () => {
                   </ul>
                 </div>
                 
-                <button className={`w-full py-3 sm:py-3.5 px-4 rounded-full font-bold text-sm sm:text-base transition-all duration-200 cursor-pointer ${plan.styles.button}`}>
+                <button 
+                  onClick={() => handlePlanClick(plan)}
+                  className={`w-full py-3 sm:py-3.5 px-4 rounded-full font-bold text-sm sm:text-base transition-all duration-200 cursor-pointer ${plan.styles.button}`}
+                >
                   {plan.buttonText[lang]}
                 </button>
               </motion.div>
@@ -258,6 +294,14 @@ const Pricing = () => {
           })}
         </div>
       </div>
+
+      {/* Manual Payment Gateway Modal */}
+      <PaymentModal 
+        isOpen={isPaymentOpen}
+        onClose={() => setIsPaymentOpen(false)}
+        plan={selectedPlan}
+        onSuccess={handlePaymentSuccess}
+      />
     </section>
   );
 };
